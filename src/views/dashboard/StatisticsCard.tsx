@@ -1,5 +1,5 @@
 // ** React Imports
-import { ReactElement } from 'react'
+import { ReactElement, useEffect, useState  } from 'react'
 
 // ** MUI Imports
 import Box from '@mui/material/Box'
@@ -20,6 +20,10 @@ import AccountOutline from 'mdi-material-ui/AccountOutline'
 
 // ** Types
 import { ThemeColor } from 'src/@core/layouts/types'
+
+//** Services
+import { getMetricData } from 'src/services/getMetricData'
+import { getMetricDataAsync } from 'src/services/getMetricDataAsync'
 
 interface DataType {
   stats: string
@@ -54,40 +58,61 @@ const salesData: DataType[] = [
     icon: <CurrencyUsd sx={{ fontSize: '1.75rem' }} />
   }
 ]
-
-const renderStats = () => {
-  return salesData.map((item: DataType, index: number) => (
-    <Grid item xs={12} sm={3} key={index}>
-      <Box key={index} sx={{ display: 'flex', alignItems: 'center' }}>
-        <Avatar
-          variant='rounded'
-          sx={{
-            mr: 3,
-            width: 44,
-            height: 44,
-            boxShadow: 3,
-            color: 'common.white',
-            backgroundColor: `${item.color}.main`
-          }}
-        >
-          {item.icon}
-        </Avatar>
-        <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-          <Typography variant='caption'>{item.title}</Typography>
-          <Typography variant='h6'>{item.stats}</Typography>
-        </Box>
-      </Box>
-    </Grid>
-  ))
-}
-
 const StatisticsCard = () => {
+  const [stats, setStats] = useState<React.ReactNode[]>([]);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const response = await getMetricDataAsync('');
+        const { id, title } = response;
+        console.log({ response });
+
+        const statsContent = salesData.map((item: DataType, index: number) => (
+          <Grid item xs={12} sm={3} key={index}>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <Avatar
+                variant='rounded'
+                sx={{
+                  mr: 3,
+                  width: 44,
+                  height: 44,
+                  boxShadow: 3,
+                  color: 'common.white',
+                  backgroundColor: `${item.color}.main`,
+                }}
+              >
+                {item.icon}
+              </Avatar>
+              <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                <Typography variant='caption'>{item.title}</Typography>
+                <Typography variant='h6'>{item.stats}</Typography>
+                <Typography variant='caption'>{title}</Typography>
+              </Box>
+            </Box>
+          </Grid>
+        ));
+
+        setStats(statsContent);
+      } catch (error) {
+        console.error('Error fetching metric data:', error);
+      }
+    };
+
+    fetchStats();
+  }, []);
+
   return (
     <Card>
       <CardHeader
         title='Statistics Card'
         action={
-          <IconButton size='small' aria-label='settings' className='card-more-options' sx={{ color: 'text.secondary' }}>
+          <IconButton
+            size='small'
+            aria-label='settings'
+            className='card-more-options'
+            sx={{ color: 'text.secondary' }}
+          >
             <DotsVertical />
           </IconButton>
         }
@@ -103,17 +128,17 @@ const StatisticsCard = () => {
           sx: {
             mb: 2.5,
             lineHeight: '2rem !important',
-            letterSpacing: '0.15px !important'
-          }
+            letterSpacing: '0.15px !important',
+          },
         }}
       />
-      <CardContent sx={{ pt: theme => `${theme.spacing(3)} !important` }}>
+      <CardContent sx={{ pt: (theme) => `${theme.spacing(3)} !important` }}>
         <Grid container spacing={[5, 0]}>
-          {renderStats()}
+          {stats}
         </Grid>
       </CardContent>
     </Card>
-  )
-}
+  );
+};
 
-export default StatisticsCard
+export default StatisticsCard;
